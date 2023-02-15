@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UtCDotNet", "UtCDotNet\UtCDotNet.csproj", "{98A4F736-1AFE-440F-9504-BAD97B170BEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UtCDotNetTests", "UtCDotNetTests\UtCDotNetTests.csproj", "{8C520998-71F9-464F-BEE5-12304B0D70BC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{98A4F736-1AFE-440F-9504-BAD97B170BEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98A4F736-1AFE-440F-9504-BAD97B170BEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98A4F736-1AFE-440F-9504-BAD97B170BEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98A4F736-1AFE-440F-9504-BAD97B170BEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C520998-71F9-464F-BEE5-12304B0D70BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C520998-71F9-464F-BEE5-12304B0D70BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C520998-71F9-464F-BEE5-12304B0D70BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C520998-71F9-464F-BEE5-12304B0D70BC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
