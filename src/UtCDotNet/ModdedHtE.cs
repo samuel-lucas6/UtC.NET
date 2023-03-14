@@ -1,5 +1,5 @@
 ﻿/*
-    UtC.NET: Bellare and Hoang's UtC and HtE[UtC] transforms using ChaCha20-Poly1305 and BLAKE2b.
+    ModdedUtC.NET: Bellare and Hoang's ModdedUtC and HtE[ModdedUtC] transforms using ChaCha20-Poly1305 and BLAKE2b.
     Copyright (c) 2023 Samuel Lucas
     
     Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -26,12 +26,12 @@ using Geralt;
 
 namespace UtCDotNet;
 
-public static class HtE
+public static class ModdedHtE
 {
-    public const int KeySize = UtC.KeySize;
-    public const int NonceSize = UtC.NonceSize;
-    public const int TagSize = UtC.TagSize;
-    public const int CommitmentSize = UtC.CommitmentSize;
+    public const int KeySize = ModdedUtC.KeySize;
+    public const int NonceSize = ModdedUtC.NonceSize;
+    public const int TagSize = ModdedUtC.TagSize;
+    public const int CommitmentSize = ModdedUtC.CommitmentSize;
     
     public static void Encrypt(Span<byte> ciphertext, ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> key, ReadOnlySpan<byte> associatedData = default)
     {
@@ -42,7 +42,7 @@ public static class HtE
         Span<byte> subKey = stackalloc byte[KeySize];
         DeriveKey(subKey, nonce, key, associatedData);
         
-        UtC.Encrypt(ciphertext, plaintext, nonce, subKey, associatedData: Span<byte>.Empty);
+        ModdedUtC.Encrypt(ciphertext, plaintext, nonce, subKey, associatedData: Span<byte>.Empty);
         CryptographicOperations.ZeroMemory(subKey);
     }
     
@@ -56,7 +56,7 @@ public static class HtE
         Span<byte> subKey = stackalloc byte[KeySize];
         DeriveKey(subKey, nonce, key, associatedData);
         
-        UtC.Decrypt(plaintext, ciphertext, nonce, subKey, associatedData: Span<byte>.Empty);
+        ModdedUtC.Decrypt(plaintext, ciphertext, nonce, subKey, associatedData: Span<byte>.Empty);
         CryptographicOperations.ZeroMemory(subKey);
     }
     

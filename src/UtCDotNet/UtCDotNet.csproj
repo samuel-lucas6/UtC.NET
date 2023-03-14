@@ -12,7 +12,7 @@
         <PackageProjectUrl>https://github.com/samuel-lucas6/UtC.NET</PackageProjectUrl>
         <RepositoryUrl>https://github.com/samuel-lucas6/UtC.NET</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <PackageTags>committing-aead key-committing fully-committing chacha20poly1305 blake2b</PackageTags>
+        <PackageTags>committing-aead key-committing fully-committing chacha20poly1305 blake2b cx aes</PackageTags>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     </PropertyGroup>
 

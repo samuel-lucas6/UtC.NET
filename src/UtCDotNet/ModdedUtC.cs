@@ -23,15 +23,16 @@
 
 using System.Security.Cryptography;
 using Geralt;
+using ChaCha20Poly1305 = Geralt.ChaCha20Poly1305;
 
 namespace UtCDotNet;
 
-public static class HtE
+public static class ModdedUtC
 {
-    public const int KeySize = UtC.KeySize;
-    public const int NonceSize = UtC.NonceSize;
-    public const int TagSize = UtC.TagSize;
-    public const int CommitmentSize = UtC.CommitmentSize;
+    public const int KeySize = ChaCha20Poly1305.KeySize;
+    public const int NonceSize = ChaCha20Poly1305.NonceSize;
+    public const int TagSize = ChaCha20Poly1305.TagSize;
+    public const int CommitmentSize = BLAKE2b.TagSize;
     
     public static void Encrypt(Span<byte> ciphertext, ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> key, ReadOnlySpan<byte> associatedData = default)
     {
@@ -39,11 +40,13 @@ public static class HtE
         Validation.EqualToSize(nameof(nonce), nonce.Length, NonceSize);
         Validation.EqualToSize(nameof(key), key.Length, KeySize);
         
-        Span<byte> subKey = stackalloc byte[KeySize];
-        DeriveKey(subKey, nonce, key, associatedData);
+        Span<byte> prfOutput = stackalloc byte[BLAKE2b.MaxHashSize];
+        Span<byte> commitment = prfOutput[..CommitmentSize], subKey = prfOutput[CommitmentSize..];
+        BLAKE2b.ComputeTag(prfOutput, nonce, key);
         
-        UtC.Encrypt(ciphertext, plaintext, nonce, subKey, associatedData: Span<byte>.Empty);
-        CryptographicOperations.ZeroMemory(subKey);
+        commitment.CopyTo(ciphertext[..CommitmentSize]);
+        ChaCha20Poly1305.Encrypt(ciphertext[CommitmentSize..], plaintext, nonce, subKey, associatedData);
+        CryptographicOperations.ZeroMemory(prfOutput);
     }
     
     public static void Decrypt(Span<byte> plaintext, ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> key, ReadOnlySpan<byte> associatedData = default)
@@ -53,18 +56,16 @@ public static class HtE
         Validation.EqualToSize(nameof(nonce), nonce.Length, NonceSize);
         Validation.EqualToSize(nameof(key), key.Length, KeySize);
         
-        Span<byte> subKey = stackalloc byte[KeySize];
-        DeriveKey(subKey, nonce, key, associatedData);
+        Span<byte> prfOutput = stackalloc byte[BLAKE2b.MaxHashSize];
+        Span<byte> commitment = prfOutput[..CommitmentSize], subKey = prfOutput[CommitmentSize..];
+        BLAKE2b.ComputeTag(prfOutput, nonce, key);
         
-        UtC.Decrypt(plaintext, ciphertext, nonce, subKey, associatedData: Span<byte>.Empty);
-        CryptographicOperations.ZeroMemory(subKey);
-    }
-    
-    private static void DeriveKey(Span<byte> subKey, ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> key, ReadOnlySpan<byte> associatedData)
-    {
-        using var blake2b = new IncrementalBLAKE2b(subKey.Length, key);
-        blake2b.Update(nonce);
-        blake2b.Update(associatedData);
-        blake2b.Finalize(subKey);
+        if (!ConstantTime.Equals(commitment, ciphertext[..CommitmentSize])) {
+            CryptographicOperations.ZeroMemory(prfOutput);
+            throw new CryptographicException();
+        }
+        
+        ChaCha20Poly1305.Decrypt(plaintext, ciphertext[CommitmentSize..], nonce, subKey, associatedData);
+        CryptographicOperations.ZeroMemory(prfOutput);
     }
 }

@@ -32,7 +32,7 @@ public static class UtC
     public const int KeySize = ChaCha20Poly1305.KeySize;
     public const int NonceSize = ChaCha20Poly1305.NonceSize;
     public const int TagSize = ChaCha20Poly1305.TagSize;
-    public const int CommitmentSize = BLAKE2b.TagSize;
+    public const int CommitmentSize = CX.BlockSize;
     
     public static void Encrypt(Span<byte> ciphertext, ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> key, ReadOnlySpan<byte> associatedData = default)
     {
@@ -40,12 +40,11 @@ public static class UtC
         Validation.EqualToSize(nameof(nonce), nonce.Length, NonceSize);
         Validation.EqualToSize(nameof(key), key.Length, KeySize);
         
-        Span<byte> prfOutput = stackalloc byte[BLAKE2b.MaxHashSize];
-        Span<byte> commitment = prfOutput[..CommitmentSize], subKey = prfOutput[CommitmentSize..];
-        BLAKE2b.ComputeTag(prfOutput, nonce, key);
+        Span<byte> subKey = stackalloc byte[KeySize];
+        CX.Derive(ciphertext[..CommitmentSize], subKey, nonce, key);
         
-        commitment.CopyTo(ciphertext[..CommitmentSize]);
         ChaCha20Poly1305.Encrypt(ciphertext[CommitmentSize..], plaintext, nonce, subKey, associatedData);
+        CryptographicOperations.ZeroMemory(subKey);
     }
     
     public static void Decrypt(Span<byte> plaintext, ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> key, ReadOnlySpan<byte> associatedData = default)
@@ -55,16 +54,18 @@ public static class UtC
         Validation.EqualToSize(nameof(nonce), nonce.Length, NonceSize);
         Validation.EqualToSize(nameof(key), key.Length, KeySize);
         
-        Span<byte> prfOutput = stackalloc byte[BLAKE2b.MaxHashSize];
-        Span<byte> commitment = prfOutput[..CommitmentSize], subKey = prfOutput[CommitmentSize..];
-        BLAKE2b.ComputeTag(prfOutput, nonce, key);
+        Span<byte> commitment = stackalloc byte[CommitmentSize], subKey = stackalloc byte[KeySize];
+        CX.Derive(commitment, subKey, nonce, key);
         
-        if (!ConstantTime.Equals(commitment, ciphertext[..CommitmentSize])) {
-            CryptographicOperations.ZeroMemory(prfOutput);
+        bool valid = ConstantTime.Equals(commitment, ciphertext[..CommitmentSize]);
+        CryptographicOperations.ZeroMemory(commitment);
+        
+        if (!valid) {
+            CryptographicOperations.ZeroMemory(subKey);
             throw new CryptographicException();
         }
         
         ChaCha20Poly1305.Decrypt(plaintext, ciphertext[CommitmentSize..], nonce, subKey, associatedData);
-        CryptographicOperations.ZeroMemory(prfOutput);
+        CryptographicOperations.ZeroMemory(subKey);
     }
 }
